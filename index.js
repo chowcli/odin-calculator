@@ -62,3 +62,14 @@ function populateScreen(event) {
 numberBtns.forEach(btn => {
   btn.addEventListener("click", populateScreen);
 });
+
+
+
+
+// function for delete button
+function deleteValue() {
+  let length = bellowScreen.textContent.length;
+  bellowScreen.textContent = bellowScreen.textContent.slice(0, length - 1);
+}
+
+deleteBtn.addEventListener("click", deleteValue);
