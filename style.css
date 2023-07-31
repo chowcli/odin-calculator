@@ -82,3 +82,21 @@ body {
 #multiply {
   font-size: 20px;
 }
+
+#upper {
+  width: 340px;
+  height: 40px;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 20px;
+  padding-right: 15px;
+}
+
+#bellow {
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  font-size: 40px;
+  text-align: end;
+  padding-top: 10px;
+  padding-right: 15px;
+  width: 340px;
+  height: 55px;
+}
