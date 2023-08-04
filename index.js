@@ -1,75 +1,157 @@
-// function for add, subtract, multiply, divide
-function add(a, b) {
-  return a + b;
+// Object Values
+const calculator = {
+  currDisplay: "0",
+  prevDisplay: "",
+  firstOperand: null,
+  operator: null,
+  waitingForSecondOperand: false,
+};
+
+// Update Current Display
+function showCurrDisplay() {
+  const currDisplay = document.getElementById("bellow");
+  currDisplay.textContent = calculator.currDisplay;
 }
+showCurrDisplay();
 
-function subtract(a, b) {
-  return a - b;
-}
+// Handle Key Press
+const controlBtn = document.querySelector(".bigBtn");
+controlBtn.addEventListener("click", handleControlBtn);
 
-function multiply(a, b) {
-  return a * b;
-}
-
-function divide(a, b) {
-  return a / b;
-}
-
-// function to call the operators function
-function operate(operator, a, b) {
-  a = Number(a);
-  b = Number(b);
-
-  switch (operator) {
-    case "+":
-      return add(a, b);
-    case "-":
-      return subtract(a, b);
-    case "*":
-      return multiply(a, b);
-    case "/":
-      if (b === 0) return null;
-      else return divide(a, b);
-    default:
-      return null;
+function handleControlBtn(event) {
+  const { target } = event;
+  if (!target.matches("button")) {
+    return;
+  }
+  if (target.matches("#clearBtn")) {
+    resetCalculator();
+    showCurrDisplay();
+    showPrevDisplay();
+    return;
+  }
+  if (target.matches("#deleteBtn")) {
+    deleteDigit();
+    showCurrDisplay();
+    return;
   }
 }
 
-// UI
-const upperScreen = document.querySelector("#upper");
-const bellowScreen = document.querySelector("#bellow");
-const clearBtn = document.querySelector("#clearBtn");
-const deleteBtn = document.querySelector("#deleteBtn");
-const periodBtn = document.querySelector("#period");
-const equalBtn = document.querySelector("#equal");
+const keys = document.querySelector(".smallBtn");
+keys.addEventListener("click", handleNumAndOpBtn);
 
-const numberBtns = document.querySelectorAll(".number");
-const operatorBtns = document.querySelectorAll(".operator");
+function handleNumAndOpBtn(event) {
+  const { target } = event;
 
-let firstValue = "";
-let secondValue = "";
-let operator = "";
-
-// function to display clicked button number on the screen
-function populateScreen(event) {
-  if (bellowScreen.textContent.length < 12) {
-    firstValue = event.target.textContent;
-    bellowScreen.textContent += firstValue;
+  if (!target.matches("button")) {
+    return;
   }
+
+  if (target.classList.contains("operator")) {
+    handleOperator(target.id);
+    showCurrDisplay();
+    showPrevDisplay();
+    return;
+  }
+
+  if (target.classList.contains("decimal")) {
+    inputDecimal(target.id);
+    showCurrDisplay();
+    return;
+  }
+
+  inputDigit(target.id);
+  showCurrDisplay();
+  showPrevDisplay();
   return;
 }
 
-numberBtns.forEach(btn => {
-  btn.addEventListener("click", populateScreen);
-});
-
-
-
-
-// function for delete button
-function deleteValue() {
-  let length = bellowScreen.textContent.length;
-  bellowScreen.textContent = bellowScreen.textContent.slice(0, length - 1);
+// Reset Calculator
+function resetCalculator() {
+  calculator.currDisplay = "0";
+  calculator.prevDisplay = "";
+  calculator.firstOperand = null;
+  calculator.operator = null;
+  calculator.waitingForSecondOperand = false;
 }
 
-deleteBtn.addEventListener("click", deleteValue);
+// Delete Digit
+function deleteDigit() {
+  if (calculator.currDisplay.length < 2) {
+    calculator.currDisplay = "0";
+    return;
+  }
+
+  calculator.currDisplay = calculator.currDisplay.slice(0, -1);
+}
+
+// Input Digit
+function inputDigit(digit) {
+  if (calculator.currDisplay.length < 13) {
+    if (calculator.waitingForSecondOperand === true) {
+      calculator.currDisplay = digit;
+      calculator.waitingForSecondOperand = false;
+      return;
+    }
+
+    calculator.currDisplay =
+      calculator.currDisplay === "0" ? digit : calculator.currDisplay + digit;
+  }
+}
+
+// Input Decimal
+function inputDecimal(dot) {
+  if (calculator.waitingForSecondOperand === true) {
+    calculator.currDisplay = "0.";
+    calculator.waitingForSecondOperand = false;
+    return;
+  }
+  if (!calculator.currDisplay.includes(dot)) {
+    calculator.currDisplay += dot;
+    return;
+  }
+}
+
+// Handle Operator
+function handleOperator(nextOperator) {
+  const {
+    currDisplay,
+    prevDisplay,
+    firstOperand,
+    operator,
+    waitingForSecondOperand,
+  } = calculator;
+  const inputValue = parseFloat(currDisplay);
+
+  if (operator && waitingForSecondOperand) {
+    calculator.operator = nextOperator;
+    return;
+  }
+
+  if (firstOperand === null && !isNaN(inputValue)) {
+    calculator.firstOperand = inputValue;
+  } else if (operator) {
+    const result = calculate(firstOperand, inputValue, operator);
+
+    calculator.currDisplay = `${parseFloat(result.toFixed(13))}`;
+    calculator.firstOperand = result;
+  }
+
+  calculator.operator = nextOperator;
+  calculator.waitingForSecondOperand = true;
+}
+
+// Calculator Logic
+function calculate(firstOperand, secondOperand, operator) {
+  switch (operator) {
+    case "+":
+      return firstOperand + secondOperand;
+    case "-":
+      return firstOperand - secondOperand;
+    case "*":
+      return firstOperand * secondOperand;
+    case "/":
+      return firstOperand / secondOperand;
+    default:
+      return secondOperand;
+  }
+}
