@@ -3,6 +3,7 @@ const calculator = {
   currDisplay: "0",
   prevDisplay: "",
   firstOperand: null,
+  secondOperand: null,
   operator: null,
   waitingForSecondOperand: false,
 };
@@ -13,6 +14,38 @@ function showCurrDisplay() {
   currDisplay.textContent = calculator.currDisplay;
 }
 showCurrDisplay();
+
+// Update Previous Display
+function showPrevDisplay() {
+  const { firstOperand, secondOperand, operator, waitingForSecondOperand } =
+    calculator;
+  const prevDisplay = document.getElementById("upper");
+  const visualOperator = {
+    "+": "+",
+    "-": "-",
+    "*": "&#215;",
+    "/": "&#247;",
+  };
+
+  // Reset the screen
+  if (calculator.currDisplay === "0") {
+    prevDisplay.textContent = calculator.prevDisplay;
+    return;
+  }
+
+  // Display only the first operand and the selected operator
+  if (waitingForSecondOperand === true && operator != "=") {
+    calculator.prevDisplay = `${firstOperand} ${visualOperator[operator]}`;
+    prevDisplay.innerHTML = calculator.prevDisplay;
+    return;
+  }
+  // Display full expression when click "=" sign
+  if (operator === "=") {
+    prevDisplay.innerHTML =
+      calculator.prevDisplay + ` ${secondOperand} ${operator}`;
+    return;
+  }
+}
 
 // Handle Key Press
 const controlBtn = document.querySelector(".bigBtn");
@@ -61,7 +94,6 @@ function handleNumAndOpBtn(event) {
 
   inputDigit(target.id);
   showCurrDisplay();
-  showPrevDisplay();
   return;
 }
 
@@ -70,6 +102,7 @@ function resetCalculator() {
   calculator.currDisplay = "0";
   calculator.prevDisplay = "";
   calculator.firstOperand = null;
+  calculator.secondOperand = null;
   calculator.operator = null;
   calculator.waitingForSecondOperand = false;
 }
@@ -86,21 +119,23 @@ function deleteDigit() {
 
 // Input Digit
 function inputDigit(digit) {
+  if (calculator.waitingForSecondOperand === true) {
+    calculator.currDisplay = digit;
+    calculator.waitingForSecondOperand = false;
+    return;
+  }
+  // prevent user from entering too long number
   if (calculator.currDisplay.length < 13) {
-    if (calculator.waitingForSecondOperand === true) {
-      calculator.currDisplay = digit;
-      calculator.waitingForSecondOperand = false;
-      return;
-    }
-
     calculator.currDisplay =
       calculator.currDisplay === "0" ? digit : calculator.currDisplay + digit;
+    return;
   }
 }
 
 // Input Decimal
 function inputDecimal(dot) {
   if (calculator.waitingForSecondOperand === true) {
+    // prevent digit being appended to the existing value
     calculator.currDisplay = "0.";
     calculator.waitingForSecondOperand = false;
     return;
@@ -113,26 +148,21 @@ function inputDecimal(dot) {
 
 // Handle Operator
 function handleOperator(nextOperator) {
-  const {
-    currDisplay,
-    prevDisplay,
-    firstOperand,
-    operator,
-    waitingForSecondOperand,
-  } = calculator;
+  const { currDisplay, firstOperand, operator, waitingForSecondOperand } =
+    calculator;
   const inputValue = parseFloat(currDisplay);
 
   if (operator && waitingForSecondOperand) {
     calculator.operator = nextOperator;
     return;
   }
-
-  if (firstOperand === null && !isNaN(inputValue)) {
+  if (firstOperand === null) {
     calculator.firstOperand = inputValue;
   } else if (operator) {
-    const result = calculate(firstOperand, inputValue, operator);
-
-    calculator.currDisplay = `${parseFloat(result.toFixed(13))}`;
+    calculator.secondOperand = inputValue;
+    const result = calculate(firstOperand, calculator.secondOperand, operator);
+    // this condition is for "=" sign
+    calculator.currDisplay = `${parseFloat(result.toFixed(7))}`;
     calculator.firstOperand = result;
   }
 
@@ -152,6 +182,6 @@ function calculate(firstOperand, secondOperand, operator) {
     case "/":
       return firstOperand / secondOperand;
     default:
-      return secondOperand;
+      return secondOperand; // return result
   }
 }
